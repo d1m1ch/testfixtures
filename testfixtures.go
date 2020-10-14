@@ -338,11 +338,15 @@ func (l *Loader) Load() error {
 			return err
 		}
 	}
+	tablesToLoad := make([]string, len(l.fixturesFiles))
+
+	for i, file := range l.fixturesFiles {
+		tablesToLoad[i] = file.fileNameWithoutExtension()
+	}
 
 	err := l.helper.disableReferentialIntegrity(l.db, func(tx *sql.Tx) error {
-		modifiedTables := make(map[string]bool, len(l.fixturesFiles))
-		for _, file := range l.fixturesFiles {
-			tableName := file.fileNameWithoutExtension()
+		modifiedTables := make(map[string]bool, len(tablesToLoad))
+		for _, tableName := range tablesToLoad {
 			modified, err := l.helper.isTableModified(tx, tableName)
 			if err != nil {
 				return err
@@ -390,7 +394,7 @@ func (l *Loader) Load() error {
 	if err != nil {
 		return err
 	}
-	return l.helper.afterLoad(l.db)
+	return l.helper.saveState(l.db, tablesToLoad)
 }
 
 // InsertError will be returned if any error happens on database while

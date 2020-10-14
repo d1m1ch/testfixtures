@@ -103,12 +103,16 @@ func (h *mySQL) isTableModified(q queryable, tableName string) (bool, error) {
 }
 
 func (h *mySQL) afterLoad(q queryable) error {
+	return h.saveState(q, h.tables)
+}
+
+func (h *mySQL) saveState(q queryable, tables []string) error {
 	if h.tablesChecksum != nil {
 		return nil
 	}
 
-	h.tablesChecksum = make(map[string]int64, len(h.tables))
-	for _, t := range h.tables {
+	h.tablesChecksum = make(map[string]int64, len(tables))
+	for _, t := range tables {
 		checksum, err := h.getChecksum(q, t)
 		if err != nil {
 			return err

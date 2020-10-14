@@ -26,6 +26,9 @@ func (*MockHelper) isTableModified(queryable, string) (bool, error) {
 func (*MockHelper) afterLoad(queryable) error {
 	return nil
 }
+func (*MockHelper) saveState(queryable, []string) error {
+	return nil
+}
 func (*MockHelper) quoteKeyword(string) string {
 	return ""
 }
