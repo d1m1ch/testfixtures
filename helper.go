@@ -24,6 +24,7 @@ type helper interface {
 	saveState(queryable, []string) error
 	quoteKeyword(string) string
 	whileInsertOnTable(*sql.Tx, string, func() error) error
+	cleanTable(tx *sql.Tx, name string) error
 }
 
 type queryable interface {
@@ -72,5 +73,12 @@ func (baseHelper) afterLoad(_ queryable) error {
 }
 
 func (baseHelper) saveState(queryable, []string) error {
+	return nil
+}
+
+func (h baseHelper) cleanTable(tx *sql.Tx, name string) error {
+	if _, err := tx.Exec(fmt.Sprintf("DELETE FROM %s", h.quoteKeyword(name))); err != nil {
+		return fmt.Errorf(`testfixtures: could not clean table "%s": %w`, name, err)
+	}
 	return nil
 }
