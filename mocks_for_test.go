@@ -29,6 +29,9 @@ func (*MockHelper) afterLoad(queryable) error {
 func (*MockHelper) saveState(queryable, []string) error {
 	return nil
 }
+func (*MockHelper) cleanTables(tx *sql.Tx, tables ...string) error {
+	return nil
+}
 func (*MockHelper) quoteKeyword(string) string {
 	return ""
 }

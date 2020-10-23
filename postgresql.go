@@ -388,10 +388,3 @@ func (*postgreSQL) quoteKeyword(s string) string {
 	}
 	return strings.Join(parts, ".")
 }
-
-func (h *postgreSQL) cleanTable(tx *sql.Tx, name string) error {
-	if _, err := tx.Exec(fmt.Sprintf("TRUNCATE TABLE %s", h.quoteKeyword(name))); err != nil {
-		return fmt.Errorf(`testfixtures: could not clean table "%s": %w`, name, err)
-	}
-	return nil
-}

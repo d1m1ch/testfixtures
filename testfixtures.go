@@ -345,32 +345,14 @@ func (l *Loader) Load() error {
 	}
 
 	err := l.helper.disableReferentialIntegrity(l.db, func(tx *sql.Tx) error {
-		modifiedTables := make(map[string]bool, len(tablesToLoad))
-		for _, tableName := range tablesToLoad {
-			modified, err := l.helper.isTableModified(tx, tableName)
-			if err != nil {
-				return err
-			}
-			modifiedTables[tableName] = modified
-		}
 
 		// Delete existing table data for specified fixtures before populating the data. This helps avoid
 		// DELETE CASCADE constraints when using the `UseAlterConstraint()` option.
-		for _, file := range l.fixturesFiles {
-			modified := modifiedTables[file.fileNameWithoutExtension()]
-			if !modified {
-				continue
-			}
-			if err := l.helper.cleanTable(tx, file.fileNameWithoutExtension()); err != nil {
-				return err
-			}
+		if err := l.helper.cleanTables(tx, tablesToLoad...); err != nil {
+			return err
 		}
 
 		for _, file := range l.fixturesFiles {
-			modified := modifiedTables[file.fileNameWithoutExtension()]
-			if !modified {
-				continue
-			}
 			err := l.helper.whileInsertOnTable(tx, file.fileNameWithoutExtension(), func() error {
 				for j, i := range file.insertSQLs {
 					if _, err := tx.Exec(i.sql, i.params...); err != nil {
@@ -391,10 +373,7 @@ func (l *Loader) Load() error {
 		}
 		return nil
 	})
-	if err != nil {
-		return err
-	}
-	return l.helper.saveState(l.db, tablesToLoad)
+	return err
 }
 
 // InsertError will be returned if any error happens on database while

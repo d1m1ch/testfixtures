@@ -3,6 +3,7 @@ package testfixtures
 import (
 	"database/sql"
 	"fmt"
+	"strings"
 )
 
 const (
@@ -24,7 +25,7 @@ type helper interface {
 	saveState(queryable, []string) error
 	quoteKeyword(string) string
 	whileInsertOnTable(*sql.Tx, string, func() error) error
-	cleanTable(tx *sql.Tx, name string) error
+	cleanTables(tx *sql.Tx, tables ...string) error
 }
 
 type queryable interface {
@@ -76,9 +77,15 @@ func (baseHelper) saveState(queryable, []string) error {
 	return nil
 }
 
-func (h baseHelper) cleanTable(tx *sql.Tx, name string) error {
-	if _, err := tx.Exec(fmt.Sprintf("DELETE FROM %s", h.quoteKeyword(name))); err != nil {
-		return fmt.Errorf(`testfixtures: could not clean table "%s": %w`, name, err)
+func (h baseHelper) cleanTables(tx *sql.Tx, tables ...string) error {
+
+	sb := &strings.Builder{}
+	for _, table := range tables {
+		sb.WriteString(fmt.Sprintf("DELETE FROM %s ;\n", h.quoteKeyword(table)))
+	}
+
+	if _, err := tx.Exec(sb.String()); err != nil {
+		return fmt.Errorf(`testfixtures: could not clean tables "%v": %w`, tables, err)
 	}
 	return nil
 }
