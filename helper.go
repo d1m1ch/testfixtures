@@ -81,11 +81,11 @@ func (h baseHelper) cleanTables(tx *sql.Tx, tables ...string) error {
 
 	sb := &strings.Builder{}
 	for _, table := range tables {
-		sb.WriteString(fmt.Sprintf("DELETE FROM %s ;\n", h.quoteKeyword(table)))
+		sb.WriteString(fmt.Sprintf("DELETE FROM %s ;\n", table))
 	}
 
 	if _, err := tx.Exec(sb.String()); err != nil {
-		return fmt.Errorf(`testfixtures: could not clean tables "%v": %w`, tables, err)
+		return fmt.Errorf(`testfixtures: could not clean tables "%v using query %s": %w`, tables, sb.String(), err)
 	}
 	return nil
 }
