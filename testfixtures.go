@@ -21,6 +21,7 @@ type Loader struct {
 	db            *sql.DB
 	helper        helper
 	fixturesFiles []*fixtureFile
+	tablesToClean []string
 
 	skipTestDatabaseCheck bool
 	location              *time.Location
@@ -82,6 +83,14 @@ func New(options ...func(*Loader) error) (*Loader, error) {
 	}
 
 	return l, nil
+}
+
+// Pass this option if you want to clean a specific list of tables before fixtures loading
+func TablesToClean(tableNames ...string) func(loader *Loader) error {
+	return func(l *Loader) error {
+		l.tablesToClean = tableNames
+		return nil
+	}
 }
 
 // Database sets an existing sql.DB instant to Loader.
@@ -344,11 +353,16 @@ func (l *Loader) Load() error {
 		tablesToLoad[i] = file.fileNameWithoutExtension()
 	}
 
+	var tablesToClean []string
+	if len(l.tablesToClean) == 0 {
+		tablesToClean = tablesToLoad
+	} else {
+		tablesToClean = l.tablesToClean
+	}
+
 	err := l.helper.disableReferentialIntegrity(l.db, func(tx *sql.Tx) error {
 
-		// Delete existing table data for specified fixtures before populating the data. This helps avoid
-		// DELETE CASCADE constraints when using the `UseAlterConstraint()` option.
-		if err := l.helper.cleanTables(tx, tablesToLoad...); err != nil {
+		if err := l.helper.cleanTables(tx, tablesToClean...); err != nil {
 			return err
 		}
 
