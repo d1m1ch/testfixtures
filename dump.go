@@ -4,11 +4,9 @@ import (
 	"database/sql"
 	"encoding/hex"
 	"fmt"
+	"gopkg.in/yaml.v2"
 	"os"
 	"path/filepath"
-	"unicode/utf8"
-
-	"gopkg.in/yaml.v2"
 )
 
 // Dumper is resposible for dumping fixtures from the database into a
@@ -158,10 +156,7 @@ func (d *Dumper) dumpTable(table string) error {
 func convertValue(value interface{}) interface{} {
 	switch v := value.(type) {
 	case []byte:
-		if utf8.Valid(v) {
-			return string(v)
-		}
-		return "0x" + hex.EncodeToString(value.([]byte))
+		return "0x" + hex.EncodeToString(v)
 	}
 	return value
 }
